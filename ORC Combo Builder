@@ -1,0 +1,70 @@
+--use ermdb
+--go
+
+/* Distinct Combos */
+
+--select distinct Objective_ID from Objectives_Test
+
+--select distinct Objective_ID, Risk_ID from Risks_Test
+
+--select distinct Risk_ID, Control_ID from Controls_Test
+
+/* Library Combos */
+
+--select distinct a.Objective_ID, b.Risk_ID, c.Control_ID
+--	from Objectives_Test a,
+--		Risks_Test b,
+--		Controls_Test c
+--	where a.Objective_ID = b.Objective_ID and
+--		b.Risk_ID = c.Risk_ID
+--	order by Objective_ID
+
+--select distinct b.Risk_ID, c.Control_ID
+--	from 
+--		Risks_Test b,
+--		Controls_Test c
+--	where b.Risk_ID = c.Risk_ID
+
+/* Library Views */
+
+select distinct --top 50
+
+	/*Objectives Table Values*/
+	a.Objective_ID, Objective_Description, Objective_Owner, Objective_Delegate, Objective_User_Notes, 
+	User_Field_O1, User_Field_O2, Objective_Owner_M0, Objective_Delegate_M0,
+
+	/*Risks Table Values*/
+	b.Risk_ID, Risk_Description, Risk_Owner, Risk_Description_Detail, Risk_Delegate, User_Notes_R1,
+	Custom_Risk_ID, Residual_Risk, Residual_Risk_Rationale, Control_Environment, Control_Environment_Rationale,
+	Residual_Risk_Dollars, Severity_Risk_Rating_Custom, Likelihood_Risk_Rating_Custom, Inherent_Risk_Score_Custom,
+	Residual_Risk_Custom, Risk_Process_ID, Risk_Primary_Cause, Ops_Risk_Subtype_Cause, Comp_Risk_Subtype_Cause, 
+	Risk_Primary_Effect, Ops_Risk_Subtype_Cause, Comp_Risk_Subtype_Effect, Reputational_Flag, Ops_Basel_Cause_1,
+	Ops_Basel_Effect_1, Ops_Basel_Cause_2, Ops_Basel_Effect_2, Ops_Basel_Cause_3, Ops_Basel_Effect_3, User_Field_R1,
+	User_Field_R2, Risk_Owner_M0, Risk_Delegate_M0,
+
+	/*Control Table Values*/
+	c.Control_ID, Control_Description, Control_Owner, Control_Effectiveness, Control_Effectiveness_Custom,
+	Control_Description_Detail, Control_Delegate, User_Notes_C1, Sox_Non_Sox, Key_Non_Key, Custom_Control_ID,
+	Control_Frequency, Control_Nature, Control_Type, Control_Importance, Monitoring_Doc_Description, 
+	Monitoring_Description_Location, Monitoring_Doc_Signoff, Monitoring_Doc_Provider, COSO_Principle_1,
+	COSO_Principle_2, COSO_Principle_3, COSO_Principle_4, COSO_Principle_5, COSO_Principle_6, COSO_Principle_7,
+	COSO_Principle_8, COSO_Principle_9, COSO_Principle_10, COSO_Principle_11, COSO_Principle_12, COSO_Principle_13,
+	COSO_Principle_14, COSO_Principle_15, COSO_Principle_16, COSO_Principle_17, EY_Reference, Division, Department,
+	Unit, Process, SOC1, Product, [System], Regulation, Control_System, Financial_Category, Financial_Line_Item,
+	SIW, Audit_Comments, Monitoring_Frequency, Date_Last_Monitored, Date_Last_Attestation, Attestation_Exceptions,
+	Shared_Service_Scenario, Shared_Service_Group, Account, Cost_Center, User_Field_C1, User_Field_C2, Control_Owner_M0,
+	Control_Delegate_M0
+
+
+from Objectives_Test a
+	left join Risks_Test b
+	on a.Objective_ID = b.Objective_ID
+	left join Controls_Test c
+	on b.Risk_ID = c.Risk_ID
+	order by a.Objective_ID
+
+--from Risks_Test b
+--	join Controls_Test c
+--	on b.Risk_ID = c.Risk_ID
+--	order by b.Risk_ID
+
