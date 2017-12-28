@@ -1,0 +1,119 @@
+
+use ermdb
+go
+
+--------------------------------------------------------------------------------------
+
+/* create temp ID table to have distinct delegates from controls table */
+
+create table #tempID (
+	Delegate nvarchar(100),
+	M0 nvarchar(100)
+)
+;
+
+/* insert distinct delegate values from controls table */
+/* also grabs control owners who are their won delegate */
+
+insert into #tempID
+	select distinct Control_Delegate, Control_Delegate_M0 
+	from Controls
+;
+
+
+--drop table #tempID
+
+------------------------------------------------------------------------------------
+
+/* store Parent/Child columns in temp table from EmployeeCTE */
+
+create table #depthID (
+	MGR_Name nvarchar(100),
+	EMP_Name nvarchar(100)
+)
+;
+
+--drop table #depthID
+
+-----------------------------------------------------------------------------------
+
+create table #depthChart (
+	EMP_Name nvarchar(100),
+	depth nvarchar(100)
+)
+;
+
+/* Recursion to get parent child relationships for entire hierarchy */
+/* Runs on distinct control delegates to create approval paths */
+
+
+with EmployeeCTE as
+( 
+select EMP_M0, EMP_Name, MGR_M0, EMP_M0 as ORIG_EMP_M0, 1 as ORDER_NO
+from EMP_MGR
+where EMP_M0 in (select M0 from #TempID)
+
+union all
+
+select EMP_MGR.EMP_M0, 
+EMP_MGR.EMP_Name, EMP_MGR.MGR_M0, EmployeeCTE.ORIG_EMP_M0, EmployeeCTE.ORDER_NO + 1
+from EMP_MGR
+join EmployeeCTE
+on EMP_MGR.EMP_M0 = 
+EmployeeCTE.MGR_M0
+)
+
+/* insert into temp table for reference and to make depth counts in future CTE */
+
+insert into #depthID (MGR_Name, EMP_Name)
+select distinct E2.EMP_Name as Mgr_Name, 
+E1.EMP_Name
+from EmployeeCTE E1
+left join EmployeeCTE E2
+on E1.MGR_M0 = E2.EMP_M0 and E1.ORIG_EMP_M0 = E2.ORIG_EMP_M0
+order by Mgr_Name
+option (maxrecursion 0)
+
+/* Look at values */
+
+select * from #depthID
+
+---------------------------------------------------------------------------------------
+
+/* Get tier counts by counting depth in tree */
+
+;
+
+with node_mgrCTE(EMP_Name, MGR_Name) as 
+(
+select EMP_Name, MGR_Name from #depthID
+
+union all
+
+select nm.EMP_Name, dID.MGR_Name
+from node_mgrCTE as nm, #depthID as dID
+where dID.EMP_Name = nm.MGR_Name and dID.MGR_Name IS NOT NULL
+)
+
+/* Put values in #depthChart for reference */
+
+insert into #depthChart (EMP_Name, depth)
+select EMP_Name, count(MGR_Name) as depth from node_mgrCTE group by EMP_Name;
+
+/* Look at values */
+
+select * from #depthChart
+
+----------------------------------------------------------------------------------------
+
+/* Delete tempID table at end so rebuilt in future runs */
+
+drop table #tempID
+
+/* Delete depthID table at end so rebuilt in future runs */
+
+drop table #depthID
+
+/* Delete depthChart table at end so rebuilt in future runs */
+
+drop table #depthChart
